@@ -47,6 +47,7 @@ const Dashboard = () => {
     documentReader: {
       title: "Lawgic DocReader",
       description: "Upload and analyze legal documents to extract key information, generate summaries, and get answers to specific questions.",
+      sampleDocsLink: "https://drive.google.com/drive/folders/1rB3mfdrTBPnJVD84EzJ_nMeiPVpPGjmm?usp=drive_link",
       steps: [
         {
           title: "Upload your document",
@@ -219,11 +220,8 @@ const Dashboard = () => {
                 <div className="flex space-x-2">
                   <button 
                     onClick={() => setActiveModal('chatbot')} 
-                    className="flex-1 bg-[#f3eee5] text-[#251c1a] border border-[#c8a27c]/30 py-2 px-3 rounded-lg hover:bg-[#e8e2d9] transition-colors text-sm"
+                    className="flex-1 bg-[#251c1a] text-[#f3eee5] py-2 px-3 rounded-lg hover:bg-[#3b2a25] transition-colors text-sm"
                   >
-                    How It Works
-                  </button>
-                  <button className="flex-1 bg-[#251c1a] text-[#f3eee5] py-2 px-3 rounded-lg hover:bg-[#3b2a25] transition-colors text-sm">
                     Launch
                   </button>
                 </div>
@@ -249,18 +247,10 @@ const Dashboard = () => {
                 <div className="flex space-x-2">
                   <button 
                     onClick={() => setActiveModal('documentReader')} 
-                    className="flex-1 bg-[#f3eee5] text-[#251c1a] border border-[#c8a27c]/30 py-2 px-3 rounded-lg hover:bg-[#e8e2d9] transition-colors text-sm"
-                  >
-                    How It Works
-                  </button>
-                  <a 
-                    href="https://lawgic-case-doc-reader.onrender.com/" 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="flex-1 bg-[#251c1a] text-[#f3eee5] py-2 px-3 rounded-lg hover:bg-[#3b2a25] transition-colors text-sm text-center"
+                    className="flex-1 bg-[#251c1a] text-[#f3eee5] py-2 px-3 rounded-lg hover:bg-[#3b2a25] transition-colors text-sm"
                   >
                     Launch
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
@@ -284,11 +274,8 @@ const Dashboard = () => {
                 <div className="flex space-x-2">
                   <button 
                     onClick={() => setActiveModal('ipcFinder')} 
-                    className="flex-1 bg-[#f3eee5] text-[#251c1a] border border-[#c8a27c]/30 py-2 px-3 rounded-lg hover:bg-[#e8e2d9] transition-colors text-sm"
+                    className="flex-1 bg-[#251c1a] text-[#f3eee5] py-2 px-3 rounded-lg hover:bg-[#3b2a25] transition-colors text-sm"
                   >
-                    How It Works
-                  </button>
-                  <button className="flex-1 bg-[#251c1a] text-[#f3eee5] py-2 px-3 rounded-lg hover:bg-[#3b2a25] transition-colors text-sm">
                     Launch
                   </button>
                 </div>
@@ -542,7 +529,6 @@ const Dashboard = () => {
                 <div className="p-5 sm:p-6 border-t border-[#c8a27c]/20 bg-[#f9f6f1] flex justify-end rounded-b-2xl">
                   <a 
                     href={activeModal === 'documentReader' ? 'https://lawgic-case-doc-reader.onrender.com/' : '#'}
-
                     target={activeModal === 'documentReader' ? '_blank' : '_self'}
                     rel="noopener noreferrer"
                     className="bg-[#251c1a] text-white py-2 px-6 rounded-lg hover:bg-[#3b2a25] transition-colors text-sm sm:text-base font-medium flex items-center"
@@ -550,6 +536,17 @@ const Dashboard = () => {
                     Launch Tool
                     <FaExternalLinkAlt className="ml-2" size={12} />
                   </a>
+                  {activeModal === 'documentReader' && (
+                    <a 
+                      href={modelInstructions.documentReader.sampleDocsLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-4 bg-[#c8a27c] text-white py-2 px-6 rounded-lg hover:bg-[#b08a6c] transition-colors text-sm sm:text-base font-medium flex items-center"
+                    >
+                      Sample Docs
+                      <FaExternalLinkAlt className="ml-2" size={12} />
+                    </a>
+                  )}
                 </div>
               </>
             )}
