@@ -23,7 +23,7 @@ function Hero() {
       <div className="container mx-auto max-w-7xl px-6 sm:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           {/* Left side with increased margin */}
-          <div className="lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-left relative z-10 lg:ml-6">
+          <div className="lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-left relative z-10 lg:ml-6 pt-10 sm:pt-16 md:pt-8 lg:pt-0">
             {/* Subtle gradient backgrounds */}
             <div className="absolute -top-32 -left-32 w-64 h-64 rounded-full bg-[#b19f84]/5 blur-3xl"></div>
             
