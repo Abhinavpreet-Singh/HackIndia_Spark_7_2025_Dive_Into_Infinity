@@ -136,8 +136,8 @@ const Dashboard = () => {
   // Function to handle tool launches
   const handleToolLaunch = (tool) => {
     if (tool === 'chatbot') {
-      // Navigate to chatbot page
-      navigate('/chatbot');
+      // Use window.location for more reliable navigation in deployed environments
+      window.location.href = '/#/chatbot';
     } else {
       // Open modal for other tools
       setActiveModal(tool);
