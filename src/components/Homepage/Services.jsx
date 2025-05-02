@@ -1,44 +1,49 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FaBalanceScale, FaSearch, FaFileAlt, FaChartLine, FaUserTie, FaRegLightbulb } from 'react-icons/fa';
+import { FaBalanceScale, FaSearch, FaFileAlt, FaChartLine, FaUserTie, FaRegLightbulb, FaGavel, FaNewspaper, FaLightbulb, FaHeadset } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Services = () => {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+
   const services = [
   {
-    title: "AI-Powered Case Search",
-    description: "Find relevant Indian legal cases instantly with AI-driven search, smart categorization, and precise precedent matching.",
+    title: "AI-Powered Legal Research",
+    description: "Find relevant legal precedents and case law instantly with our AI-driven search, tailored specifically to Indian legal context.",
     icon: <FaSearch className="text-4xl mb-4 text-[#f3eee5]/80" />,
-    features: ["Indian Supreme & High Court cases", "Advanced filters", "AI-powered case matching"]
+    features: ["Supreme Court & High Court cases", "Context-aware search", "Citation suggestions"]
   },
   {
-    title: "Legal Precedent Analysis",
-    description: "Understand judicial trends with AI-driven insights into case outcomes, precedent impact, and legal argument strength.",
-    icon: <FaBalanceScale className="text-4xl mb-4 text-[#f3eee5]/80" />,
-    features: ["Case outcome predictions", "Precedent impact analysis", "Jurisdictional insights"]
+    title: "IPC Section Finder",
+    description: "Quickly identify relevant Indian Penal Code sections applicable to your case scenario with our intelligent search algorithm.",
+    icon: <FaGavel className="text-4xl mb-4 text-[#f3eee5]/80" />,
+    features: ["Scenario-based search", "Section explanations", "Related precedents"]
   },
   {
-    title: "Smart Document Summarization",
-    description: "Convert lengthy legal texts into structured, digestible summaries highlighting key arguments and relevant citations.",
+    title: "Legal Document Analysis",
+    description: "Upload and analyze legal documents to extract key insights, arguments, and citations with our advanced AI tools.",
     icon: <FaFileAlt className="text-4xl mb-4 text-[#f3eee5]/80" />,
-    features: ["AI-generated summaries", "Key argument extraction", "Linked case citations"]
+    features: ["Document summarization", "Key argument extraction", "Citation linking"]
   },
   {
-    title: "Data-Driven Legal Insights",
-    description: "Analyze legal trends, judge decisions, and case success rates through interactive data visualization tools.",
-    icon: <FaChartLine className="text-4xl mb-4 text-[#f3eee5]/80" />,
-    features: ["Judge ruling patterns", "Legal trend analysis", "Custom legal reports"]
+    title: "Legal News",
+    description: "Stay updated with the latest legal news and updates from around the world.",
+    icon: <FaNewspaper className="text-4xl mb-4 text-[#f3eee5]/80" />,
+    features: ["Daily updates", "In-depth analysis", "Expert opinions"]
   },
   {
-    title: "Community & Expert Discussions",
-    description: "Engage in discussions with legal professionals, share case experiences, and gain insights from industry experts.",
-    icon: <FaUserTie className="text-4xl mb-4 text-[#f3eee5]/80" />,
-    features: ["Legal Q&A forum", "Case discussions", "Expert consultations"]
+    title: "Legal Insights",
+    description: "Gain valuable insights and analysis on various legal topics and trends.",
+    icon: <FaLightbulb className="text-4xl mb-4 text-[#f3eee5]/80" />,
+    features: ["Expert articles", "Case studies", "Trend analysis"]
   },
   {
-    title: "Multilingual Legal Research",
-    description: "Access legal resources in multiple Indian languages, breaking language barriers for better understanding.",
-    icon: <FaRegLightbulb className="text-4xl mb-4 text-[#f3eee5]/80" />,
-    features: ["English, Hindi & regional languages", "Legal term translations", "Localized case insights"]
+    title: "24/7 Support",
+    description: "Get round-the-clock support for all your legal research and analysis needs.",
+    icon: <FaHeadset className="text-4xl mb-4 text-[#f3eee5]/80" />,
+    features: ["Live chat", "Email support", "Phone support"]
   }
 ];
 
@@ -63,9 +68,11 @@ const Services = () => {
   };
 
   const handleSearchNowClick = () => {
-    const heroSection = document.querySelector('#home');
-    if (heroSection) {
-      heroSection.scrollIntoView({ behavior: 'smooth' });
+    // Navigate to dashboard if logged in, or signup page if not
+    if (currentUser) {
+      navigate('/dashboard');
+    } else {
+      navigate('/signup');
     }
   };
 
@@ -128,23 +135,7 @@ const Services = () => {
                   </li>
                 ))}
               </ul>
-              <div className="mt-8 pt-6 border-t border-[#f3eee5]/10">
-                <a 
-                  href="#" 
-                  className="inline-flex items-center text-[#f3eee5] font-medium group-hover:text-[#f3eee5]/80"
-                >
-                  Learn more
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    className="h-4 w-4 ml-2 transform group-hover:translate-x-1 transition-transform duration-300" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </a>
-              </div>
+              {/* Removed "Learn more" section */}
             </motion.div>
           ))}
         </motion.div>
@@ -160,7 +151,7 @@ const Services = () => {
             onClick={handleSearchNowClick}
             className="inline-block bg-[#f3eee5] text-[#251c1a] px-8 py-4 rounded-lg font-semibold hover:bg-[#f3eee5]/90 transition-colors duration-300"
           >
-            Search Now~
+            Search Now
           </button>
           <p className="text-[#f3eee5]/60 mt-4 text-sm">
             See how our AI-powered platform can transform your legal research workflow
