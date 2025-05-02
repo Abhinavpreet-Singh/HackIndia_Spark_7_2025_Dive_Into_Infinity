@@ -4,6 +4,46 @@ import { useNavigate } from 'react-router-dom';
 import GeminiService from '../services/GeminiService';
 import Loader from '../components/Loader';
 
+// AnimatedTyping component for animated text display
+const AnimatedTyping = ({ text, onComplete }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const textRef = useRef(text);
+  const speedRef = useRef(30); // milliseconds per character (adjust for speed)
+
+  useEffect(() => {
+    // Reset when text changes
+    textRef.current = text;
+    setDisplayedText('');
+    setCurrentIndex(0);
+  }, [text]);
+
+  useEffect(() => {
+    if (currentIndex < textRef.current.length) {
+      // Calculate typing speed - faster for spaces and punctuation
+      const char = textRef.current[currentIndex];
+      const isPunctuation = /[.,!?;:]/.test(char);
+      const isSpace = char === ' ';
+      
+      // Adjust typing speed for different characters
+      const typingSpeed = isPunctuation ? speedRef.current * 5 : 
+                          isSpace ? speedRef.current * 0.5 : 
+                          speedRef.current;
+      
+      const timer = setTimeout(() => {
+        setDisplayedText(prev => prev + textRef.current[currentIndex]);
+        setCurrentIndex(prevIndex => prevIndex + 1);
+      }, typingSpeed);
+      
+      return () => clearTimeout(timer);
+    } else if (onComplete && currentIndex === textRef.current.length) {
+      onComplete();
+    }
+  }, [currentIndex, onComplete]);
+
+  return <p className="whitespace-pre-wrap">{displayedText}</p>;
+};
+
 // Legal knowledge base for fallbacks if API fails
 const legalKnowledgeBase = {
   propertyDisputes: {
@@ -196,6 +236,8 @@ const Chatbot = () => {
   const [apiAvailable, setApiAvailable] = useState(false);
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
+  const [isAnimationComplete, setIsAnimationComplete] = useState(true);
+  const [animatingMessageId, setAnimatingMessageId] = useState(null);
   
   // Sample suggested queries
   const suggestedQueries = [
@@ -232,8 +274,15 @@ const Chatbot = () => {
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    // Only smooth scroll if we're not currently typing a message
+    // This prevents jumping while typing
+    if (isAnimationComplete) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // Instant scroll during animation to keep up with the text
+      messagesEndRef.current?.scrollIntoView();
+    }
+  }, [messages, isAnimationComplete]);
 
   // Handle sending a message
   const handleSendMessage = async (e) => {
@@ -283,11 +332,14 @@ const Chatbot = () => {
         id: messages.length + 2,
         text: botResponse,
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(),
+        animate: true // Flag to animate this message
       };
       
       setIsTyping(false);
       setMessages(prev => [...prev, botMessage]);
+      setAnimatingMessageId(botMessage.id);
+      setIsAnimationComplete(false);
       
     } catch (error) {
       console.error('Error getting response:', error);
@@ -298,8 +350,10 @@ const Chatbot = () => {
         id: messages.length + 2,
         text: "I'm sorry, I encountered an error processing your request. Please try again later.",
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(),
+        animate: true
       }]);
+      setIsAnimationComplete(false);
     }
   };
 
@@ -361,11 +415,14 @@ const Chatbot = () => {
         id: messages.length + 2,
         text: botResponse,
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(),
+        animate: true // Flag to animate this message
       };
       
       setIsTyping(false);
       setMessages(prev => [...prev, botMessage]);
+      setAnimatingMessageId(botMessage.id);
+      setIsAnimationComplete(false);
       
     } catch (error) {
       console.error('Error getting response:', error);
@@ -376,8 +433,10 @@ const Chatbot = () => {
         id: messages.length + 2,
         text: "I'm sorry, I encountered an error processing your request. Please try again later.",
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(),
+        animate: true
       }]);
+      setIsAnimationComplete(false);
     }
   };
 
@@ -612,7 +671,17 @@ const Chatbot = () => {
                       {message.sender === 'user' ? 'You' : 'Lawgic AI'} • {formatTime(message.timestamp)}
                     </div>
                   </div>
-                  <p className="whitespace-pre-wrap">{message.text}</p>
+                  {message.sender === 'bot' && message.animate && message.id === animatingMessageId ? (
+                    <AnimatedTyping 
+                      text={message.text} 
+                      onComplete={() => {
+                        setIsAnimationComplete(true);
+                        setAnimatingMessageId(null);
+                      }} 
+                    />
+                  ) : (
+                    <p className="whitespace-pre-wrap">{message.text}</p>
+                  )}
                 </div>
               </div>
             ))}
@@ -668,12 +737,13 @@ const Chatbot = () => {
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Type your legal question..."
               className="flex-1 py-3 px-4 bg-[#251c1a]/5 rounded-full outline-none focus:ring-2 focus:ring-[#251c1a]/20"
+              disabled={!isAnimationComplete} // Disable input while animation is in progress
             />
             <button 
               type="submit"
-              disabled={inputMessage.trim() === ''}
+              disabled={inputMessage.trim() === '' || !isAnimationComplete}
               className={`p-3 rounded-full ${
-                inputMessage.trim() === '' 
+                inputMessage.trim() === '' || !isAnimationComplete
                   ? 'bg-[#251c1a]/20 text-[#251c1a]/50' 
                   : 'bg-[#251c1a] text-white hover:bg-[#251c1a]/80'
               } transition-colors`}
