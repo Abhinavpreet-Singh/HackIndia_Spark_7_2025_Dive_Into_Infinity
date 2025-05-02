@@ -539,8 +539,9 @@ const Dashboard = () => {
                 
                 <div className="p-5 sm:p-6 border-t border-[#c8a27c]/20 bg-[#f9f6f1] flex justify-end rounded-b-2xl">
                   <a 
-                    href={activeModal === 'documentReader' ? 'https://lawgic-case-doc-reader.onrender.com/' : '#'}
-                    target={activeModal === 'documentReader' ? '_blank' : '_self'}
+                    href={activeModal === 'documentReader' ? 'https://lawgic-case-doc-reader.onrender.com/' : 
+                         activeModal === 'ipcFinder' ? 'https://zk27pmvp-8000.inc1.devtunnels.ms/' : '#'}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="bg-[#251c1a] text-white py-2 px-6 rounded-lg hover:bg-[#3b2a25] transition-colors text-sm sm:text-base font-medium flex items-center"
                   >
