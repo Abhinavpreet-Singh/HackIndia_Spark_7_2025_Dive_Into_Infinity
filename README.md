@@ -59,7 +59,6 @@ Lawgic – AI-Powered Legal Research Assistant
 - Abhinavpreet Singh  
 - Dhruv Kumar Aggarwal  
 - Pratham Mittal  
-- Yamini Baluni
 
 ---
 
