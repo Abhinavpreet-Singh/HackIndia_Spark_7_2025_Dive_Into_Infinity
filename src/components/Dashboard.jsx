@@ -136,10 +136,9 @@ const Dashboard = () => {
   // Function to handle tool launches
   const handleToolLaunch = (tool) => {
     if (tool === 'chatbot') {
-      // Use React Router's navigate function instead of window.location
       navigate('/chatbot');
     } else {
-      // Open modal for other tools
+      // Open modal for other tools including ipcFinder
       setActiveModal(tool);
     }
   };
