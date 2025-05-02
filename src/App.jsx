@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react'
+import React, { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 
 // Core components
@@ -88,6 +88,23 @@ const Homepage = () => {
 function AppRoutes() {
   const { currentUser } = useAuth();
 
+  // Add effect to handle direct navigation and page reloads
+  useEffect(() => {
+    // This helps ensure routes work on page reload and direct URL access
+    const handleRouteChange = () => {
+      // Force a re-render on navigation changes
+      window.addEventListener('popstate', () => {
+        window.location.reload();
+      });
+    };
+
+    handleRouteChange();
+    
+    return () => {
+      window.removeEventListener('popstate', () => {});
+    };
+  }, []);
+
   return (
     <Routes>
       {/* Auth Routes */}
@@ -153,6 +170,21 @@ function AppRoutes() {
 }
 
 function App() {
+  // Move the useEffect hook inside the App component
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Script to handle direct navigation to routes (added to window.onload)
+      window.onload = function() {
+        // If loaded from a redirect or 404, ensure proper route handling
+        if (window.location.pathname !== '/' && !window.location.pathname.endsWith('.html')) {
+          const path = window.location.pathname;
+          // Re-initialize the router with the correct path
+          window.history.pushState({}, '', path);
+        }
+      };
+    }
+  }, []);
+
   return (
     <Router>
       <AuthProvider>
