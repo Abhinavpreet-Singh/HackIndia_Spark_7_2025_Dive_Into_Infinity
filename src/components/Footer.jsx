@@ -1,9 +1,16 @@
-import React from 'react';
-import { FaHome, FaInfoCircle, FaGavel, FaEnvelope, FaPhoneAlt, FaMapMarkerAlt, FaLinkedin, FaTwitter, FaGithub } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { FaHome, FaInfoCircle, FaGavel, FaEnvelope, FaPhoneAlt, FaMapMarkerAlt, FaLinkedin, FaTwitter, FaGithub, FaNewspaper, FaLightbulb, FaHeadset, FaSearch, FaFileAlt, FaCheck } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const location = useLocation();
+  const { currentUser } = useAuth();
+  const [email, setEmail] = useState('');
+  const [subscriptionMessage, setSubscriptionMessage] = useState('');
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   
   // Animation variants
   const containerVariants = {
@@ -20,6 +27,36 @@ const Footer = () => {
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1 }
+  };
+
+  // Handle navigation with smooth scrolling
+  const handleNavClick = (section) => {
+    if (location.pathname === '/' && section) {
+      // On homepage, scroll to the section
+      const element = document.getElementById(section);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else if (section) {
+      // If not on homepage, navigate to homepage then scroll
+      window.location.href = `/?section=${section}`;
+    }
+  };
+
+  const handleSubscribe = (e) => {
+    e.preventDefault();
+    if (!email) return;
+    
+    // In a real application, you would send this email to your backend
+    // For now, we'll just show a success message
+    setSubscriptionMessage("Thank you for subscribing to our legal newsletter! You'll now receive the latest case law updates, legal insights, and platform features.");
+    setShowSuccessMessage(true);
+    setEmail('');
+    
+    // Auto-hide the success message after 5 seconds
+    setTimeout(() => {
+      setShowSuccessMessage(false);
+    }, 5000);
   };
 
   return (
@@ -68,36 +105,36 @@ const Footer = () => {
             </h3>
             <ul className="space-y-3">
               <li>
-                <a href="#" className="flex items-center space-x-2 group">
+                <Link to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center space-x-2 group">
                   <span className="h-8 w-8 rounded bg-[#f3eee5]/10 flex items-center justify-center group-hover:bg-[#f3eee5]/20 transition-all duration-300">
                     <FaHome className="text-[#f3eee5]" />
                   </span>
                   <span className="group-hover:translate-x-1 transition-transform duration-300">Home</span>
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="flex items-center space-x-2 group">
+                <Link to="/" onClick={() => handleNavClick('about')} className="flex items-center space-x-2 group">
                   <span className="h-8 w-8 rounded bg-[#f3eee5]/10 flex items-center justify-center group-hover:bg-[#f3eee5]/20 transition-all duration-300">
                     <FaInfoCircle className="text-[#f3eee5]" />
                   </span>
                   <span className="group-hover:translate-x-1 transition-transform duration-300">About</span>
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="flex items-center space-x-2 group">
+                <Link to="/" onClick={() => handleNavClick('services')} className="flex items-center space-x-2 group">
                   <span className="h-8 w-8 rounded bg-[#f3eee5]/10 flex items-center justify-center group-hover:bg-[#f3eee5]/20 transition-all duration-300">
                     <FaGavel className="text-[#f3eee5]" />
                   </span>
                   <span className="group-hover:translate-x-1 transition-transform duration-300">Services</span>
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="flex items-center space-x-2 group">
+                <Link to="/" onClick={() => handleNavClick('faq')} className="flex items-center space-x-2 group">
                   <span className="h-8 w-8 rounded bg-[#f3eee5]/10 flex items-center justify-center group-hover:bg-[#f3eee5]/20 transition-all duration-300">
-                    <FaEnvelope className="text-[#f3eee5]" />
+                    <FaGavel className="text-[#f3eee5]" />
                   </span>
-                  <span className="group-hover:translate-x-1 transition-transform duration-300">Contact</span>
-                </a>
+                  <span className="group-hover:translate-x-1 transition-transform duration-300">FAQ</span>
+                </Link>
               </li>
             </ul>
           </motion.div>
@@ -108,32 +145,31 @@ const Footer = () => {
               Our Services
             </h3>
             <ul className="space-y-3">
-  <li className="flex items-center space-x-2">
-    <span className="h-1.5 w-1.5 rounded-full bg-[#f3eee5]"></span>
-    <span>AI-Powered Case Search</span>
-  </li>
-  <li className="flex items-center space-x-2">
-    <span className="h-1.5 w-1.5 rounded-full bg-[#f3eee5]"></span>
-    <span>Legal Precedent Analysis</span>
-  </li>
-  <li className="flex items-center space-x-2">
-    <span className="h-1.5 w-1.5 rounded-full bg-[#f3eee5]"></span>
-    <span>Smart Document Summarization</span>
-  </li>
-  <li className="flex items-center space-x-2">
-    <span className="h-1.5 w-1.5 rounded-full bg-[#f3eee5]"></span>
-    <span>Data-Driven Legal Insights</span>
-  </li>
-  <li className="flex items-center space-x-2">
-    <span className="h-1.5 w-1.5 rounded-full bg-[#f3eee5]"></span>
-    <span>Community & Expert Discussions</span>
-  </li>
-  <li className="flex items-center space-x-2">
-    <span className="h-1.5 w-1.5 rounded-full bg-[#f3eee5]"></span>
-    <span>Multilingual Legal Research</span>
-  </li>
-</ul>
-
+              <li className="flex items-center space-x-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#f3eee5]"></span>
+                <span>AI-Powered Legal Research</span>
+              </li>
+              <li className="flex items-center space-x-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#f3eee5]"></span>
+                <span>IPC Section Finder</span>
+              </li>
+              <li className="flex items-center space-x-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#f3eee5]"></span>
+                <span>Legal Document Analysis</span>
+              </li>
+              <li className="flex items-center space-x-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#f3eee5]"></span>
+                <span>Legal News</span>
+              </li>
+              <li className="flex items-center space-x-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#f3eee5]"></span>
+                <span>Legal Insights</span>
+              </li>
+              <li className="flex items-center space-x-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#f3eee5]"></span>
+                <span>24/7 Support</span>
+              </li>
+            </ul>
           </motion.div>
 
           {/* Contact Us */}
@@ -190,16 +226,23 @@ const Footer = () => {
               <p className="text-[#f3eee5]/70">Subscribe for the latest legal tech news and updates</p>
             </div>
             <div className="w-full md:w-1/2">
-              <div className="flex flex-col sm:flex-row gap-3">
+              <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-3">
                 <input 
                   type="email" 
                   placeholder="Your email address" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="bg-[#f3eee5]/10 border border-[#f3eee5]/20 rounded px-4 py-2.5 text-[#f3eee5] focus:outline-none focus:ring-2 focus:ring-[#f3eee5]/30 w-full"
                 />
-                <button className="bg-[#f3eee5] text-[#251c1a] rounded px-6 py-2.5 font-medium hover:bg-[#f3eee5]/90 transition-colors whitespace-nowrap">
+                <button type="submit" className="bg-[#f3eee5] text-[#251c1a] rounded px-6 py-2.5 font-medium hover:bg-[#f3eee5]/90 transition-colors whitespace-nowrap">
                   Subscribe
                 </button>
-              </div>
+              </form>
+              {showSuccessMessage && (
+                <div className="mt-4 text-[#f3eee5]/80">
+                  {subscriptionMessage}
+                </div>
+              )}
             </div>
           </div>
         </motion.div>
@@ -225,11 +268,11 @@ const Footer = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.6 }}
             >
-              <a href="#" className="hover:text-[#f3eee5] transition-colors duration-300">Terms</a>
+              <Link to="/terms" className="hover:text-[#f3eee5] transition-colors duration-300">Terms</Link>
               <span className="hidden md:inline">•</span>
-              <a href="#" className="hover:text-[#f3eee5] transition-colors duration-300">Privacy</a>
+              <Link to="/privacy" className="hover:text-[#f3eee5] transition-colors duration-300">Privacy</Link>
               <span className="hidden md:inline">•</span>
-              <a href="#" className="hover:text-[#f3eee5] transition-colors duration-300">Cookie Policy</a>
+              <Link to="/cookie-policy" className="hover:text-[#f3eee5] transition-colors duration-300">Cookie Policy</Link>
             </motion.div>
           </div>
         </div>
