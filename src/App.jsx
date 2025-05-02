@@ -23,6 +23,9 @@ import Signup from './pages/Signup'
 import Profile from './pages/Profile'
 import { AuthProvider, useAuth } from './context/AuthContext'
 
+// Legal pages
+import Terms from './pages/Terms'
+
 // Protected route component
 const ProtectedRoute = ({ children }) => {
   const { currentUser, loading } = useAuth();
@@ -132,6 +135,14 @@ function AppRoutes() {
         <>
           <Navbar />
           <Homepage />
+        </>
+      } />
+      
+      {/* Legal Pages */}
+      <Route path="/terms" element={
+        <>
+          <Navbar />
+          <Terms />
         </>
       } />
       
