@@ -1,12 +1,14 @@
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 
 // Core components
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
-import Chatbot from './components/Chatbot'
 import Dashboard from './components/Dashboard'
 import Loader from './components/Loader'
+
+// Lazy load the Chatbot component for better performance
+const Chatbot = lazy(() => import('./pages/Chatbot'));
 
 // Homepage components
 import Hero from './components/Homepage/Hero'
@@ -104,7 +106,9 @@ function AppRoutes() {
       <Route path="/chatbot" element={
         <>
           <Navbar />
-          <Chatbot />
+          <Suspense fallback={<Loader />}>
+            <Chatbot />
+          </Suspense>
         </>
       } />
       

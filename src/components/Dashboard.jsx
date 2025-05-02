@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   FaArrowLeft, FaBell, FaExternalLinkAlt, 
   FaRegFileAlt, FaGavel, FaNewspaper,
@@ -15,6 +15,7 @@ const Dashboard = () => {
   const [activeModal, setActiveModal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mobileMenu, setMobileMenu] = useState(false);
+  const navigate = useNavigate(); // Add useNavigate hook
   
   // Model instructions with steps
   const modelInstructions = {
@@ -132,6 +133,17 @@ const Dashboard = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
+  // Function to handle tool launches
+  const handleToolLaunch = (tool) => {
+    if (tool === 'chatbot') {
+      // Navigate to chatbot page
+      navigate('/chatbot');
+    } else {
+      // Open modal for other tools
+      setActiveModal(tool);
+    }
+  };
+
   // Show loader while loading
   if (loading) {
     return <Loader />;
@@ -219,7 +231,7 @@ const Dashboard = () => {
                 </div>
                 <div className="flex space-x-2">
                   <button 
-                    onClick={() => setActiveModal('chatbot')} 
+                    onClick={() => handleToolLaunch('chatbot')} 
                     className="flex-1 bg-[#251c1a] text-[#f3eee5] py-2 px-3 rounded-lg hover:bg-[#3b2a25] transition-colors text-sm"
                   >
                     Launch
@@ -246,7 +258,7 @@ const Dashboard = () => {
                 </div>
                 <div className="flex space-x-2">
                   <button 
-                    onClick={() => setActiveModal('documentReader')} 
+                    onClick={() => handleToolLaunch('documentReader')} 
                     className="flex-1 bg-[#251c1a] text-[#f3eee5] py-2 px-3 rounded-lg hover:bg-[#3b2a25] transition-colors text-sm"
                   >
                     Launch
@@ -273,7 +285,7 @@ const Dashboard = () => {
                 </div>
                 <div className="flex space-x-2">
                   <button 
-                    onClick={() => setActiveModal('ipcFinder')} 
+                    onClick={() => handleToolLaunch('ipcFinder')} 
                     className="flex-1 bg-[#251c1a] text-[#f3eee5] py-2 px-3 rounded-lg hover:bg-[#3b2a25] transition-colors text-sm"
                   >
                     Launch
