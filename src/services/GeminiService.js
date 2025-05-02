@@ -4,9 +4,17 @@ class GeminiService {
   constructor(apiKey) {
     try {
       this.genAI = new GoogleGenerativeAI(apiKey);
-      // Update to use gemini-1.0-pro instead of gemini-pro
-      this.model = this.genAI.getGenerativeModel({ model: "gemini-1.0-pro" });
-      console.log('Gemini model initialized successfully');
+      // Use gemini-1.5-pro with modified generation config for more concise responses
+      this.model = this.genAI.getGenerativeModel({ 
+        model: "gemini-1.5-pro",
+        generationConfig: {
+          temperature: 0.2,
+          topK: 32,
+          topP: 0.95,
+          maxOutputTokens: 1000, // Reduced from 2048 to produce more concise responses
+        }
+      });
+      console.log('Gemini model initialized successfully with model: gemini-1.5-pro');
     } catch (error) {
       console.error('Error initializing Gemini model:', error);
       throw error;
@@ -21,7 +29,7 @@ class GeminiService {
     if (!GeminiService.instance) {
       try {
         GeminiService.instance = new GeminiService(apiKey);
-        console.log('GeminiService initialized successfully with key:', apiKey.substring(0, 5) + '...');
+        console.log('GeminiService initialized successfully');
       } catch (error) {
         console.error('Failed to initialize GeminiService:', error);
         throw error;
@@ -47,27 +55,32 @@ class GeminiService {
    */
   async getLegalResponse(prompt, history = []) {
     try {
-      // Create legal context prompt
+      // Create legal context prompt emphasizing brevity
       const legalPrompt = `You are Lawgic AI, a legal research assistant specialized in Indian law.
-      Please answer the following legal question in detail:
+      Please answer the following legal question concisely but accurately:
 
       "${prompt}"
       
       When answering:
-      - Focus on Indian law and precedents
-      - If discussing IPC sections, provide exact section numbers and explanations
-      - When citing cases, include full citations and key principles
-      - Format your response clearly with paragraphs and bullet points where appropriate
-      - Include a brief disclaimer that this is information, not professional legal advice`;
+      - Keep your response brief and to the point (limit to 3-4 paragraphs maximum)
+      - Focus on the most relevant Indian law and precedents
+      - If discussing IPC sections, provide only the most important information
+      - When citing cases, mention only 1-2 key precedents
+      - Use bullet points for lists to improve readability
+      - End with a brief disclaimer about this being information, not legal advice`;
 
-      console.log('Sending prompt to Gemini:', prompt);
-      
-      // Use simple generateContent API (more reliable than chat)
-      const result = await this.model.generateContent(legalPrompt);
-      const response = result.response.text();
-      console.log('Got response from Gemini API:', response.substring(0, 50) + '...');
-      
-      return response;
+      try {
+        // Try direct generation first
+        const result = await this.model.generateContent(legalPrompt);
+        return result.response.text();
+      } catch (directError) {
+        console.error('Direct generation failed, trying with parts API:', directError);
+        // Try with parts API as fallback
+        const result = await this.model.generateContent({
+          parts: [{ text: legalPrompt }],
+        });
+        return result.response.text();
+      }
     } catch (error) {
       console.error('Error getting response from Gemini:', error);
       
