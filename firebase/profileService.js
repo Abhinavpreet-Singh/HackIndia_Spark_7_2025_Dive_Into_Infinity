@@ -12,10 +12,14 @@ export const saveUserProfile = async (userId, profileData) => {
     const profileRef = doc(db, userProfilesCollection, userId);
     const profileSnap = await getDoc(profileRef);
     
+    // Set timestamp for update tracking
+    const timestamp = new Date().toISOString();
+    const dataWithTimestamp = { ...profileData, updatedAt: timestamp };
+    
     if (profileSnap.exists()) {
       // Update existing profile
-      await updateDoc(profileRef, profileData);
-      return { ...profileSnap.data(), ...profileData };
+      await updateDoc(profileRef, dataWithTimestamp);
+      return { ...profileSnap.data(), ...dataWithTimestamp };
     } else {
       // Create new profile with default fields
       const newProfile = {
@@ -25,10 +29,11 @@ export const saveUserProfile = async (userId, profileData) => {
         interests: [],
         hobbies: [],
         skills: [],
+        photoURL: '',
         collaborationPreferences: [],
         completedProfile: false,
-        createdAt: new Date().toISOString(),
-        ...profileData
+        createdAt: timestamp,
+        ...dataWithTimestamp
       };
       
       await setDoc(profileRef, newProfile);
@@ -60,19 +65,34 @@ export const getUserProfile = async (userId) => {
 // Upload a profile image
 export const uploadProfileImage = async (userId, file) => {
   try {
-    // Create a storage reference
-    const storageRef = ref(storage, `profile_images/${userId}`);
+    // Create a unique filename with timestamp to avoid caching issues
+    const timestamp = new Date().getTime();
+    const fileExtension = file.name.split('.').pop();
+    const filename = `${userId}_${timestamp}.${fileExtension}`;
     
-    // Upload the file
-    const snapshot = await uploadBytes(storageRef, file);
+    // Create a storage reference with the unique filename
+    const storageRef = ref(storage, `profile_images/${filename}`);
     
-    // Get the download URL
+    // Upload the file with metadata to ensure proper caching
+    const metadata = {
+      contentType: file.type,
+      cacheControl: 'no-cache'
+    };
+    
+    // Upload the file with metadata
+    const snapshot = await uploadBytes(storageRef, file, metadata);
+    
+    // Get the download URL with cache busting query parameter
     const downloadURL = await getDownloadURL(snapshot.ref);
+    const cachebustedURL = `${downloadURL}?t=${timestamp}`;
     
-    // Update the user profile with the new image URL
-    await saveUserProfile(userId, { photoURL: downloadURL, updatedAt: new Date().toISOString() });
+    // Update the user profile with the new image URL in Firestore
+    await saveUserProfile(userId, { 
+      photoURL: cachebustedURL,
+      updatedAt: new Date().toISOString() 
+    });
     
-    return downloadURL;
+    return cachebustedURL;
   } catch (error) {
     console.error('Error uploading profile image:', error);
     throw error;
@@ -101,10 +121,29 @@ export const updateUserDisplayName = async (user, displayName) => {
 // Update user profile photo
 export const updateUserProfilePhoto = async (user, photoURL) => {
   try {
-    // Update in auth
-    await updateProfile(user, { photoURL });
+    // Update in auth with retry logic
+    let retryAttempt = 0;
+    const maxRetries = 3;
     
-    // Update in profile is handled by uploadProfileImage
+    while (retryAttempt < maxRetries) {
+      try {
+        await updateProfile(user, { photoURL });
+        break; // If successful, exit the retry loop
+      } catch (error) {
+        retryAttempt++;
+        if (retryAttempt === maxRetries) {
+          throw error; // If we've tried enough times, rethrow the error
+        }
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    
+    // Explicitly update in Firestore to ensure consistency
+    await saveUserProfile(user.uid, { 
+      photoURL, 
+      updatedAt: new Date().toISOString() 
+    });
     
     return true;
   } catch (error) {

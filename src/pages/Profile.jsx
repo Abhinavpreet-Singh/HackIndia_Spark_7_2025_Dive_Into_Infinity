@@ -1,6 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { uploadProfileImage, updateUserDisplayName, updateUserProfilePhoto, updateUserInterests } from '../../firebase/profileService';
+import { 
+  uploadProfileImage, 
+  updateUserDisplayName, 
+  updateUserProfilePhoto, 
+  updateUserInterests
+} from '../../firebase/profileService';
 import { FaUser, FaCamera, FaPencilAlt, FaCheck, FaTimes, FaGavel, FaArrowLeft, FaPlus } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
@@ -16,16 +21,20 @@ const Profile = () => {
   const [selectedInterests, setSelectedInterests] = useState([]);
   const [isAddingInterest, setIsAddingInterest] = useState(false);
   const [newInterest, setNewInterest] = useState('');
+  const [profilePicFile, setProfilePicFile] = useState(null);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
-  // Available legal interest options
+  // Simplified legal interests
   const legalInterests = [
-    "Criminal Law", "Civil Law", "Constitutional Law", "Corporate Law", 
-    "Environmental Law", "Family Law", "Human Rights", "Intellectual Property", 
-    "International Law", "Labor Law", "Tax Law", "Real Estate Law",
-    "Immigration Law", "Cyber Law", "Medical Law", "Banking & Finance",
-    "Competition Law", "Consumer Protection", "Alternative Dispute Resolution"
+    "Criminal Law", 
+    "Civil Law", 
+    "Constitutional Law", 
+    "Family Law", 
+    "Corporate Law", 
+    "Human Rights", 
+    "Intellectual Property", 
+    "International Law"
   ];
 
   useEffect(() => {
@@ -36,32 +45,19 @@ const Profile = () => {
     if (userProfile?.interests) {
       setSelectedInterests(userProfile.interests);
     }
+    
+    // Force refresh of profile image to prevent caching issues
+    if (currentUser?.photoURL) {
+      const profilePic = document.getElementById('profile-picture');
+      if (profilePic && profilePic.tagName === 'IMG') {
+        // Add a timestamp query parameter to bypass browser cache
+        profilePic.src = `${currentUser.photoURL}${currentUser.photoURL.includes('?') ? '&' : '?'}cachebust=${new Date().getTime()}`;
+      }
+    }
   }, [currentUser, userProfile]);
 
   const handleNameEdit = () => {
     setIsEditingName(true);
-  };
-
-  const handleNameSave = async () => {
-    if (!displayName.trim()) {
-      setError('Name cannot be empty');
-      return;
-    }
-
-    try {
-      setError('');
-      await updateUserDisplayName(currentUser, displayName);
-      await refreshUserData();
-      setIsEditingName(false);
-      setSuccessMessage('Name updated successfully!');
-      setTimeout(() => {
-        setSuccessMessage('');
-        navigate('/dashboard');
-      }, 1500);
-    } catch (error) {
-      console.error('Error updating name:', error);
-      setError('Failed to update name. Please try again.');
-    }
   };
 
   const handleNameCancel = () => {
@@ -70,7 +66,7 @@ const Profile = () => {
     setError('');
   };
 
-  const handleFileChange = async (e) => {
+  const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -85,51 +81,13 @@ const Profile = () => {
       return;
     }
 
-    try {
-      setIsUploading(true);
-      setError('');
-      
-      // Create a temporary object URL for immediate visual feedback
-      const tempURL = URL.createObjectURL(file);
-      const profilePicElement = document.getElementById('profile-picture');
-      if (profilePicElement && profilePicElement.tagName === 'IMG') {
-        profilePicElement.src = tempURL;
-      }
-      
-      // Simulate upload progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 300);
-
-      const photoURL = await uploadProfileImage(currentUser.uid, file);
-      
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-
-      // Update the auth profile with the new photo URL
-      await updateUserProfilePhoto(currentUser, photoURL);
-      await refreshUserData();
-      setSuccessMessage('Profile picture updated successfully!');
-      
-      // Revoke the temporary URL to free memory
-      URL.revokeObjectURL(tempURL);
-      
-      setTimeout(() => {
-        setSuccessMessage('');
-        navigate('/dashboard');
-      }, 1500);
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      setError('Failed to upload image. Please try again.');
-    } finally {
-      setIsUploading(false);
-      setTimeout(() => setUploadProgress(0), 1000);
+    setProfilePicFile(file);
+    
+    // Create a temporary object URL for preview
+    const tempURL = URL.createObjectURL(file);
+    const profilePicElement = document.getElementById('profile-picture');
+    if (profilePicElement && profilePicElement.tagName === 'IMG') {
+      profilePicElement.src = tempURL;
     }
   };
 
@@ -155,19 +113,63 @@ const Profile = () => {
     }
   };
 
-  const handleUpdateInterests = async () => {
+  const handleUpdateProfile = async () => {
     try {
       setError('');
-      await updateUserInterests(currentUser.uid, selectedInterests);
+      
+      // Save display name if it was edited
+      if (isEditingName && displayName.trim()) {
+        await updateUserDisplayName(currentUser, displayName);
+        setIsEditingName(false);
+      }
+      
+      // Upload profile picture if a new one was selected
+      if (profilePicFile) {
+        setIsUploading(true);
+        
+        // Simulate upload progress
+        const progressInterval = setInterval(() => {
+          setUploadProgress(prev => {
+            if (prev >= 90) {
+              clearInterval(progressInterval);
+              return 90;
+            }
+            return prev + 10;
+          });
+        }, 300);
+
+        const photoURL = await uploadProfileImage(currentUser.uid, profilePicFile);
+        
+        clearInterval(progressInterval);
+        setUploadProgress(100);
+
+        // Update the auth profile with the new photo URL
+        await updateUserProfilePhoto(currentUser, photoURL);
+        
+        // Cleanup
+        setProfilePicFile(null);
+        setIsUploading(false);
+      }
+      
+      // Update interests
+      if (selectedInterests.length > 0) {
+        await updateUserInterests(currentUser.uid, selectedInterests);
+      }
+      
+      // Refresh user data
       await refreshUserData();
-      setSuccessMessage('Interests updated successfully!');
+      
+      // Show success message
+      setSuccessMessage('Profile updated successfully!');
+      
+      // Navigate to dashboard after short delay
       setTimeout(() => {
-        setSuccessMessage('');
         navigate('/dashboard');
-      }, 1500);
+      }, 1000);
     } catch (error) {
-      console.error('Error updating interests:', error);
-      setError('Failed to update interests. Please try again.');
+      console.error('Error updating profile:', error);
+      setError('Failed to update profile. Please try again.');
+      setIsUploading(false);
     }
   };
 
@@ -189,6 +191,29 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-[#f3eee5] pt-24 sm:pt-28 px-4 sm:px-6">
+      {/* Success/Error Messages */}
+      {successMessage && (
+        <motion.div 
+          className="fixed top-24 right-4 sm:right-6 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg z-50 flex items-center"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 20 }}
+        >
+          <FaCheck className="mr-2" /> {successMessage}
+        </motion.div>
+      )}
+      
+      {error && (
+        <motion.div 
+          className="fixed top-24 right-4 sm:right-6 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg z-50 flex items-center"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 20 }}
+        >
+          <FaTimes className="mr-2" /> {error}
+        </motion.div>
+      )}
+      
       <div className="max-w-3xl mx-auto">
         <motion.div 
           className="bg-white rounded-2xl shadow-xl overflow-hidden"
@@ -245,7 +270,7 @@ const Profile = () => {
                 type="file"
                 ref={fileInputRef}
                 className="hidden"
-                onChange={handleFileChange}
+                onChange={handleFileSelect}
                 accept="image/jpeg, image/png, image/gif, image/webp"
                 disabled={isUploading}
               />
@@ -277,7 +302,7 @@ const Profile = () => {
                       autoFocus
                     />
                     <button
-                      onClick={handleNameSave}
+                      onClick={handleUpdateProfile}
                       className="w-8 h-8 bg-[#c8a27c] text-white rounded-full flex items-center justify-center hover:bg-[#b08e69] transition-colors"
                       title="Save"
                     >
@@ -348,7 +373,7 @@ const Profile = () => {
               </div>
             </div>
             
-            {/* Legal Interest Areas */}
+            {/* Legal Interest Areas - Simplified version */}
             <div className="mt-8">
               <h2 className="text-xl font-semibold mb-4 text-[#251c1a] flex items-center">
                 <span className="bg-[#c8a27c]/20 w-8 h-8 rounded-full flex items-center justify-center mr-2">
@@ -357,9 +382,9 @@ const Profile = () => {
                 Legal Interest Areas
               </h2>
               <div className="bg-[#f9f6f1] rounded-lg p-6 border border-[#c8a27c]/20">
-                <p className="text-[#251c1a]/70 mb-4">Select your legal interests to personalize your experience:</p>
+                <p className="text-[#251c1a]/70 mb-4">Select your legal interests:</p>
                 
-                <div className="flex flex-wrap gap-2 mb-6">
+                <div className="flex flex-wrap gap-2 mb-4">
                   {legalInterests.map((interest) => (
                     <button
                       key={interest}
@@ -374,71 +399,55 @@ const Profile = () => {
                       {selectedInterests.includes(interest) && <span className="ml-2">✓</span>}
                     </button>
                   ))}
-                  
-                  {/* Custom interest entry */}
-                  {isAddingInterest ? (
-                    <div className="flex items-center space-x-2 min-w-[200px]">
-                      <input
-                        type="text"
-                        value={newInterest}
-                        onChange={(e) => setNewInterest(e.target.value)}
-                        className="flex-1 border border-[#c8a27c]/30 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8a27c]"
-                        placeholder="Add custom interest"
-                        autoFocus
-                      />
-                      <button
-                        onClick={handleAddCustomInterest}
-                        className="w-7 h-7 bg-[#c8a27c] text-white rounded-full flex items-center justify-center hover:bg-[#b08e69] transition-colors"
-                        disabled={!newInterest.trim()}
-                      >
-                        <FaCheck className="text-xs" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsAddingInterest(false);
-                          setNewInterest('');
-                        }}
-                        className="w-7 h-7 bg-[#251c1a] text-white rounded-full flex items-center justify-center hover:bg-[#3b2a25] transition-colors"
-                      >
-                        <FaTimes className="text-xs" />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setIsAddingInterest(true)}
-                      className="px-3 py-2 text-sm rounded-full bg-[#251c1a]/10 text-[#251c1a] hover:bg-[#251c1a]/20 flex items-center"
-                    >
-                      <FaPlus className="mr-1 text-xs" /> Add Custom
-                    </button>
-                  )}
                 </div>
                 
-                {/* Update button */}
-                <button
-                  onClick={handleUpdateInterests}
-                  className="w-full bg-[#c8a27c] text-white py-2.5 rounded-lg hover:bg-[#b08e69] transition-colors font-medium flex items-center justify-center"
-                  disabled={selectedInterests.length === 0}
-                >
-                  Update Interests
-                </button>
+                {/* Simple custom interest */}
+                {isAddingInterest ? (
+                  <div className="flex items-center space-x-2 mt-2">
+                    <input
+                      type="text"
+                      value={newInterest}
+                      onChange={(e) => setNewInterest(e.target.value)}
+                      className="flex-1 border border-[#c8a27c]/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c8a27c]"
+                      placeholder="Add custom interest"
+                      autoFocus
+                    />
+                    <button
+                      onClick={handleAddCustomInterest}
+                      className="w-7 h-7 bg-[#c8a27c] text-white rounded-full flex items-center justify-center hover:bg-[#b08e69] transition-colors"
+                      disabled={!newInterest.trim()}
+                    >
+                      <FaCheck className="text-xs" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsAddingInterest(false);
+                        setNewInterest('');
+                      }}
+                      className="w-7 h-7 bg-[#251c1a] text-white rounded-full flex items-center justify-center hover:bg-[#3b2a25] transition-colors"
+                    >
+                      <FaTimes className="text-xs" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setIsAddingInterest(true)}
+                    className="mt-2 px-3 py-2 text-sm rounded-lg bg-[#251c1a]/10 text-[#251c1a] hover:bg-[#251c1a]/20 flex items-center"
+                  >
+                    <FaPlus className="mr-1 text-xs" /> Add Custom Interest
+                  </button>
+                )}
               </div>
             </div>
             
-            {/* Actions */}
-            <div className="mt-8 flex justify-between">
+            {/* Actions - Single update button */}
+            <div className="mt-8 flex justify-center">              
               <button 
-                onClick={() => navigate('/dashboard')} 
-                className="px-6 py-3 bg-[#251c1a]/10 text-[#251c1a] rounded-lg hover:bg-[#251c1a]/20 transition-colors flex items-center"
+                onClick={handleUpdateProfile} 
+                className="px-8 py-3 bg-[#251c1a] text-white rounded-lg hover:bg-[#3b2a25] transition-colors font-medium flex items-center"
               >
-                <FaArrowLeft className="mr-2" />
-                Cancel
-              </button>
-              
-              <button 
-                onClick={() => navigate('/dashboard')} 
-                className="px-6 py-3 bg-[#251c1a] text-white rounded-lg hover:bg-[#3b2a25] transition-colors"
-              >
-                Save & Return to Dashboard
+                <FaCheck className="mr-2" />
+                Update & Return to Dashboard
               </button>
             </div>
           </div>
