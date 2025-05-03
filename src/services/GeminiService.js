@@ -11,7 +11,7 @@ class GeminiService {
           temperature: 0.2,
           topK: 32,
           topP: 0.95,
-          maxOutputTokens: 1000, // Reduced from 2048 to produce more concise responses
+          maxOutputTokens: 600, // Reduced from 1000 to produce even more concise responses
         }
       });
       console.log('Gemini model initialized successfully with model: gemini-1.5-pro');
@@ -55,19 +55,20 @@ class GeminiService {
    */
   async getLegalResponse(prompt, history = []) {
     try {
-      // Create legal context prompt emphasizing brevity
+      // Create legal context prompt emphasizing extreme brevity
       const legalPrompt = `You are Lawgic AI, a legal research assistant specialized in Indian law.
-      Please answer the following legal question concisely but accurately:
+      Please answer the following legal question very concisely:
 
       "${prompt}"
       
-      When answering:
-      - Keep your response brief and to the point (limit to 3-4 paragraphs maximum)
-      - Focus on the most relevant Indian law and precedents
-      - If discussing IPC sections, provide only the most important information
-      - When citing cases, mention only 1-2 key precedents
-      - Use bullet points for lists to improve readability
-      - End with a brief disclaimer about this being information, not legal advice`;
+      IMPORTANT INSTRUCTIONS:
+      - Keep your response extremely brief (max 2-3 short paragraphs)
+      - Use only 3-5 sentences total
+      - Focus only on the most essential legal points
+      - Use bullet points for any lists to improve readability
+      - Avoid lengthy explanations and unnecessary details
+      - If citing cases, mention only the most relevant one
+      - End with a very brief disclaimer`;
 
       try {
         // Try direct generation first
@@ -105,15 +106,11 @@ class GeminiService {
     
     // Check for common legal topics
     if (prompt.includes('murder') || prompt.includes('302')) {
-      return `Murder is covered under Section 302 of the Indian Penal Code (IPC).
-      
-Section 302 IPC states: "Whoever commits murder shall be punished with death, or imprisonment for life, and shall also be liable to fine."
+      return `Murder (Section 302 IPC): Punishable with death or life imprisonment, and fine.
 
-Key cases:
-• K.M. Nanavati v. State of Maharashtra (1961) - Distinguished murder from culpable homicide
-• Bachan Singh v. State of Punjab (1980) - Established the "rarest of rare" doctrine
+Key case: K.M. Nanavati v. State of Maharashtra (1961) - Distinguished murder from culpable homicide.
 
-This is for informational purposes only and not legal advice.`;
+This is for informational purposes only.`;
     }
     
     if (prompt.includes('ipc') || prompt.includes('indian penal code') || 
@@ -123,40 +120,33 @@ This is for informational purposes only and not legal advice.`;
       const sectionMatch = prompt.match(/section\s+(\d+)/i);
       const sectionNum = sectionMatch ? sectionMatch[1] : '';
       
-      return `The Indian Penal Code (IPC) is the official criminal code of India, covering all substantive aspects of criminal law.
-${sectionNum ? `\nSection ${sectionNum} is a part of the IPC. ` : ''}
-For specific legal information, please consult the official legal texts or a qualified legal professional.
+      return `The IPC is India's official criminal code.${sectionNum ? ` Section ${sectionNum} is part of it.` : ''}
 
-This information is provided for educational purposes only.`;
+For specific legal information, consult official legal texts or a legal professional.
+
+This is for educational purposes only.`;
     }
     
     if (prompt.includes('divorce') || prompt.includes('marriage')) {
-      return `Divorce in India is governed by various personal laws based on religion:
+      return `Divorce in India is governed by religion-specific laws:
       
-• Hindu Marriage Act (for Hindus, Buddhists, Jains, Sikhs)
-• Muslim Personal Law (for Muslims)
-• Divorce Act (for Christians)
-• Special Marriage Act (for inter-religious marriages)
+• Hindu Marriage Act (Hindus, Buddhists, Jains, Sikhs)
+• Muslim Personal Law (Muslims)
+• Divorce Act (Christians)
 
-Common grounds for divorce include:
-- Cruelty (mental or physical)
-- Adultery
-- Desertion for 2+ years
-- Conversion to another religion
-- Mental disorder
+Common grounds: cruelty, adultery, desertion (2+ years).
 
-This information is for educational purposes only. Please consult a legal professional for advice.`;
+For legal advice, consult a professional.`;
     }
     
     // General fallback response
-    return `I understand you have a question about "${prompt}". To provide accurate legal information, I would need to access my legal database, which seems to be unavailable at the moment.
+    return `I understand your question about "${prompt}". For accurate legal information, please consult:
 
-For legal assistance, I recommend:
-1. Consulting a qualified lawyer
-2. Referring to official legal resources
-3. Checking government websites for up-to-date legal information
+1. A qualified lawyer
+2. Official legal resources
+3. Government websites
 
-This is for informational purposes only and not legal advice.`;
+This is for informational purposes only.`;
   }
 }
 

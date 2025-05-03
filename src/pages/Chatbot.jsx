@@ -9,7 +9,7 @@ const AnimatedTyping = ({ text, onComplete }) => {
   const [displayedText, setDisplayedText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
   const textRef = useRef(text);
-  const speedRef = useRef(30); // milliseconds per character (adjust for speed)
+  const speedRef = useRef(15); // Reduced from 30ms to 15ms per character for faster animation
 
   useEffect(() => {
     // Reset when text changes
@@ -25,9 +25,9 @@ const AnimatedTyping = ({ text, onComplete }) => {
       const isPunctuation = /[.,!?;:]/.test(char);
       const isSpace = char === ' ';
       
-      // Adjust typing speed for different characters
-      const typingSpeed = isPunctuation ? speedRef.current * 5 : 
-                          isSpace ? speedRef.current * 0.5 : 
+      // Adjusted typing speeds for faster animation
+      const typingSpeed = isPunctuation ? speedRef.current * 3 : // Reduced from 5x to 3x 
+                          isSpace ? speedRef.current * 0.3 :     // Reduced from 0.5x to 0.3x
                           speedRef.current;
       
       const timer = setTimeout(() => {
@@ -274,15 +274,35 @@ const Chatbot = () => {
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    // Only smooth scroll if we're not currently typing a message
-    // This prevents jumping while typing
-    if (isAnimationComplete) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      // Instant scroll during animation to keep up with the text
-      messagesEndRef.current?.scrollIntoView();
+    if (messagesEndRef.current) {
+      // Create observer to ensure message container is scrolled when content changes or renders
+      const observer = new MutationObserver(() => {
+        // Immediate scroll during typing to ensure visibility of new content
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      });
+
+      // Get the parent chat container to observe for changes
+      const chatContainer = messagesEndRef.current.parentElement;
+      if (chatContainer) {
+        // Observe for changes in the chat container
+        observer.observe(chatContainer, { 
+          childList: true, 
+          subtree: true,
+          characterData: true 
+        });
+      }
+
+      // Initial scroll - use smooth scrolling when not typing
+      if (isAnimationComplete) {
+        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
+      }
+
+      // Cleanup observer when component unmounts
+      return () => observer.disconnect();
     }
-  }, [messages, isAnimationComplete]);
+  }, [messages, isAnimationComplete, isTyping]);
 
   // Handle sending a message
   const handleSendMessage = async (e) => {
