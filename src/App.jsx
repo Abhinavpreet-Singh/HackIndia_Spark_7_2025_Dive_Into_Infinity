@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 
 // Core components
 import Navbar from './components/Navbar'
@@ -85,106 +85,88 @@ const Homepage = () => {
   );
 };
 
+// ScrollToTop component to handle scroll position when navigating
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  
+  return null;
+};
+
 function AppRoutes() {
   const { currentUser } = useAuth();
 
-  // Add effect to handle direct navigation and page reloads
-  useEffect(() => {
-    // This helps ensure routes work on page reload and direct URL access
-    const handleRouteChange = () => {
-      // Force a re-render on navigation changes
-      window.addEventListener('popstate', () => {
-        window.location.reload();
-      });
-    };
-
-    handleRouteChange();
-    
-    return () => {
-      window.removeEventListener('popstate', () => {});
-    };
-  }, []);
-
   return (
-    <Routes>
-      {/* Auth Routes */}
-      <Route path="/login" element={currentUser ? <Navigate to="/dashboard" /> : (
-        <>
-          <Navbar />
-          <Login />
-        </>
-      )} />
-      
-      <Route path="/signup" element={currentUser ? <Navigate to="/dashboard" /> : (
-        <>
-          <Navbar />
-          <Signup />
-        </>
-      )} />
-      
-      {/* Public Routes */}
-      <Route path="/chatbot" element={
-        <>
-          <Navbar />
-          <Suspense fallback={<Loader />}>
-            <Chatbot />
-          </Suspense>
-        </>
-      } />
-      
-      {/* Protected Routes */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <Navbar />
-          <Dashboard />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/profile" element={
-        <ProtectedRoute>
-          <Navbar />
-          <Profile />
-        </ProtectedRoute>
-      } />
-      
-      {/* Homepage Route */}
-      <Route path="/" element={
-        <>
-          <Navbar />
-          <Homepage />
-        </>
-      } />
-      
-      {/* Legal Pages */}
-      <Route path="/terms" element={
-        <>
-          <Navbar />
-          <Terms />
-        </>
-      } />
-      
-      {/* Fallback Route */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
+        {/* Auth Routes */}
+        <Route path="/login" element={currentUser ? <Navigate to="/dashboard" /> : (
+          <>
+            <Navbar />
+            <Login />
+          </>
+        )} />
+        
+        <Route path="/signup" element={currentUser ? <Navigate to="/dashboard" /> : (
+          <>
+            <Navbar />
+            <Signup />
+          </>
+        )} />
+        
+        {/* Public Routes */}
+        <Route path="/chatbot" element={
+          <>
+            <Navbar />
+            <Suspense fallback={<Loader />}>
+              <Chatbot />
+            </Suspense>
+          </>
+        } />
+        
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Navbar />
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Navbar />
+            <Profile />
+          </ProtectedRoute>
+        } />
+        
+        {/* Homepage Route */}
+        <Route path="/" element={
+          <>
+            <Navbar />
+            <Homepage />
+          </>
+        } />
+        
+        {/* Legal Pages */}
+        <Route path="/terms" element={
+          <>
+            <Navbar />
+            <Terms />
+          </>
+        } />
+        
+        {/* Fallback Route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
 
 function App() {
-  // Move the useEffect hook inside the App component
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Script to handle direct navigation to routes (added to window.onload)
-      window.onload = function() {
-        // If loaded from a redirect or 404, ensure proper route handling
-        if (window.location.pathname !== '/' && !window.location.pathname.endsWith('.html')) {
-          const path = window.location.pathname;
-          // Re-initialize the router with the correct path
-          window.history.pushState({}, '', path);
-        }
-      };
-    }
-  }, []);
-
   return (
     <Router>
       <AuthProvider>
